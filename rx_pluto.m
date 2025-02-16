@@ -2,12 +2,14 @@
 phyMode = 'BR'; % Modalità Basic Rate
 bluetoothPacket = 'DH5'; % Tipo di pacchetto Bluetooth
 sps = 8; % Samples per symbol
-payloadLengthBytes = 339; % Lunghezza massima del payload DH5
+prompt='Quanto deve essere lungo il payolad?  ';
+ payloadLengthBytes=input(prompt);
+
 payloadLengthBits = payloadLengthBytes * 8; % In bit
 
 %% Parametri del ricevitore
 sampleRate = 1e6; % Frequenza di campionamento
-centerFrequency = 2.45e9; % Frequenza portante (tipica Bluetooth)
+centerFrequency = 2.4205e9; % Frequenza portante (tipica Bluetooth)
 
 %% Configurazione ricevitore ADALM-PLUTO
 radio = sdrrx('Pluto', ...

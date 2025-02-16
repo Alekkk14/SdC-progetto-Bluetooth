@@ -9,6 +9,24 @@ end
 message = fscanf(fid, '%c', [1, inf]);
 fclose(fid);
 
+payL = 0;
+lungh = strlength(message); % numero caratteri
+if lungh > 90000
+    disp('Un testo superiore a 90k caratteri è troppo lungo per essere supportato');
+else
+    if lungh <= 339
+        payL = 339;
+    elseif (lungh>339) && (lungh<= 1000)
+        payL = 60;
+    elseif (lungh>1000) && (lungh<= 10000)
+        payL = 30;
+    elseif (lungh>10000) && (lungh<= 50000)
+        payL = 20;
+    elseif (lungh>50000) && (lungh<= 90000)
+        payL = 10;
+    end
+end
+
 %% Conversione del messaggio in sequenza binaria
 bitsPerChar = 8; % Un carattere ASCII = 8 bit
 binaryMessage = reshape(dec2bin(message, bitsPerChar).' - '0', 1, []); % Converti ogni carattere in binario
@@ -18,8 +36,7 @@ phyMode = 'BR'; % Modalità Basic Rate
 bluetoothPacket = 'DH5'; % Tipo di pacchetto Bluetooth
 sps = 8; % Samples per symbol
 
-% Payload massimo per DH5 (339 byte = 2712 bit)
-payloadLengthBytes = 339;
+payloadLengthBytes = payL;
 payloadLengthBits = payloadLengthBytes * bitsPerChar;
 
 %% Parametri di trasmissione
@@ -32,6 +49,9 @@ radio = sdrtx('Pluto', ...
     'CenterFrequency', centerFrequency, ...
     'Gain', 0, ...
     'BasebandSampleRate', sampleRate);
+
+disp(['La lunghezza del payolad usata è: ', num2str(payL), ', impostarla sul ricevitore, poi premere INVIO']);
+pause;
 
 %% Trasmissione del segnale suddiviso in pacchetti
 try
@@ -66,7 +86,7 @@ try
         
         % Visualizzazione grafica - Spettro del segnale (in potenza)
         figure(1);
-        subplot(2, 1, 1);
+        subplot(3, 1, 1);
         % Calcola il grafico dello spettro (in potenza)
         fftSignal = fftshift(fft(bluetoothWaveform)); % Trasformata FFT centrata
         freqAxis = linspace(-sampleRate/2, sampleRate/2, length(fftSignal)) + centerFrequency; % Frequenze centrate sulla portante
@@ -80,9 +100,9 @@ try
         grid on;
 
         % Visualizzazione grafica - Spettrogramma del segnale
-        subplot(2, 1, 2);
+        subplot(3, 1, 2);
         % Calcola e visualizza lo spettrogramma centrato sulla frequenza portante
-        [S, F, T] = spectrogram(bluetoothWaveform, 256, 200, 1024, sampleRate, 'yaxis');
+        [S, F, T] = spectrogram(bluetoothWaveform, 256, 200, 1024, sampleRate, 'yaxis', 'centered');
         % Trasformiamo l'asse delle frequenze per centrarlo sulla frequenza portante
         F = F + centerFrequency; 
         surf(T, F, 10*log10(abs(S).^2), 'EdgeColor', 'none');
@@ -92,7 +112,18 @@ try
         xlabel('Tempo (s)');
         ylabel('Frequenza (Hz)');
         colorbar;
+
+
+
+       % subplot(3,1,3)
+       % waterplot(S,F,T)
+       % zlabel('DSP')
+  
+      
     end
+
+    scatterplot(bluetoothWaveform, sps);
+
     disp('Trasmissione completata.');
 catch ME
     disp('Errore durante la trasmissione.');
@@ -105,3 +136,12 @@ release(radio);
 
 disp('Messaggio trasmesso con successo:');
 disp(message);
+
+
+function waterplot(s,f,t)
+% Waterfall plot of spectrogram
+    waterfall(f,t,abs(s)'.^2)
+    set(gca,XDir="reverse",View=[1 20])
+    xlabel("Frequency (Hz)")
+    ylabel("Time (s)")
+end
