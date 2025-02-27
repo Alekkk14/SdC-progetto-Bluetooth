@@ -99,7 +99,7 @@ for ii = 1:numOfSignals
         count = count + 1;
         decodedInfoTemp(count) = decodedInformation;
         validPacketsTemp(count) = pcktStatus;
-        bits = [bits;outBits];
+        bits = [bits; outBits];
     end
 end
 if ~(count == 0)
@@ -132,10 +132,17 @@ end
 accessCodeWaveform = cpmMod(accessCode);
 end
 
+% function dcCompensatedWaveform = bluetoothDCBlocker(waveform)
+% %bluetoothDCBlocker removes DC offset from the signal, WAVEFORM
+% dcComponent = mean(waveform);
+% dcCompensatedWaveform = waveform-dcComponent;
+% end
+
 function dcCompensatedWaveform = bluetoothDCBlocker(waveform)
-%bluetoothDCBlocker removes DC offset from the signal, WAVEFORM
-dcComponent = mean(waveform);
-dcCompensatedWaveform = waveform-dcComponent;
+% Rimozione offset DC, gestendo i valori complessi
+waveform = double(waveform); % Converti in double
+dcComponent = mean(real(waveform)) + 1j * mean(imag(waveform));
+dcCompensatedWaveform = waveform - dcComponent;
 end
 
 function [numOfSignals,startIndices,endIndices] = bluetoothSignalIndices(waveform,rxCfg)
@@ -172,7 +179,7 @@ for iend = 1:numOfSignals
         eIndices = diffMag(startIndices(iend):end);
     end
     [~,endIndices(iend)] = max(-eIndices); 
-    packetGap = endIndices(iend)-startIndices(iend);
+    packetGap = endIndices(iend);%-startIndices(iend);
     if packetGap<625*rxCfg.SamplesPerSymbol
        endIndices(iend) = startIndices(iend)+625*rxCfg.SamplesPerSymbol-1;
    elseif packetGap<3*625*rxCfg.SamplesPerSymbol
@@ -221,6 +228,9 @@ b = (diff(unwrap(phaseExtractor(filteredTimeSyncRcv))))./(2*pi);
 estimatedFreqOff = mean(b-a)*sampleRate;
 
 pfOffset = comm.PhaseFrequencyOffset('SampleRate',1e6*sps,'FrequencyOffset',-estimatedFreqOff);
+
+timeSyncRcv = double(timeSyncRcv);
+
 freqTimeSyncRcv = pfOffset(timeSyncRcv);
 
 rxComp = freqTimeSyncRcv;
