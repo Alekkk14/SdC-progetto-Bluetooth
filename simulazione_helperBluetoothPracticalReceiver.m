@@ -1,4 +1,4 @@
-function [bits,decodedInfo,pcktValidStatus] = helperBluetoothPracticalReceiver(rxWaveform,rxCfg)
+function [bits,decodedInfo,pcktValidStatus] = simulazione_helperBluetoothPracticalReceiver(rxWaveform,rxCfg)
 %helperBluetoothPracticalReceiver detects, synchronizes, and decodes
 %received Bluetooth BR/EDR waveform
 %
@@ -155,7 +155,7 @@ for ii = 1:nofWindows
 end
 diffMag = diff([min(meanTxWaveform);meanTxWaveform]);
 % Get start signal indices
-startIndices = find((diffMag>(0.05*max(diffMag(1:end)))));
+startIndices = find((diffMag>(0.5*max(diffMag(1:end)))));
 % if any(strcmp(rxCfg.Mode,{'EDR2M','EDR3M'}))
 %     accessCodeHeader = 126*rxCfg.SamplesPerSymbol;
 %     if numel(startIndices)>=2 && startIndices(2)<=accessCodeHeader+16*rxCfg.SamplesPerSymbol
